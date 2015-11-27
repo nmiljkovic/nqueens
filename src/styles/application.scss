@@ -1,0 +1,111 @@
+body {
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+@import "./semantic";
+
+$unsafe-bg-color: #eee;
+$visited-bg-color: #ff6b62;
+$user-placed-bg-color: #e3ffdd;
+$focused-column-bg-color: #a333c8;
+
+.legend {
+    .unsafe {
+        background-color: $unsafe-bg-color !important;
+    }
+    .visited {
+        background-color: $visited-bg-color !important;
+    }
+    .user-placed {
+        background-color: $user-placed-bg-color !important;
+    }
+    .focused-column {
+        background-color: $focused-column-bg-color !important;
+    }
+}
+
+.board {
+  display: block;
+
+  .board-focus-row {
+    display: flex;
+
+    .board-focus-cell {
+      flex-grow: 1;
+      height: 20px;
+      border: 1px solid #ddd;
+      border-right: 0;
+
+      &:last-child {
+        border-right: 1px solid #ddd;
+      }
+
+      &.focused {
+        background-color: $focused-column-bg-color;
+      }
+    }
+  }
+
+  .board-cells {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .board-row {
+    display: flex;
+
+    &:last-child .board-cell {
+      border-bottom: 1px solid #ddd;
+    }
+  }
+
+  .board-cell {
+    border-left: 1px solid #ddd;
+    border-top: 1px solid #ddd;
+    flex: 1 0 0;
+    text-align: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 23px;
+    font-weight: bold;
+    color: grey;
+
+    &:before {
+      content: '';
+      float: left;
+      padding-top: 100%;
+    }
+
+    &:last-child {
+      border-right: 1px solid #ddd;
+    }
+  }
+
+  &.fade-squares .board-cell {
+    transition: background-color 0.2s ease;
+  }
+
+  &.show-unsafe-squares .board-cell.unsafe {
+    background-color: $unsafe-bg-color;
+  }
+
+  &.show-visited-squares .board-cell.visited {
+    background-color: $visited-bg-color;
+    text-indent: -9999px;
+  }
+
+  .board-cell.queen {
+    text-indent: -9999px;
+    background: transparent url('/images/queen.png') no-repeat center;
+    background-size: 90%;
+  }
+
+  &.editing .board-cell:not(.unsafe):hover,
+  .board-cell.queen.user-placed {
+    background-color: $user-placed-bg-color;
+    cursor: pointer;
+  }
+}
