@@ -1,8 +1,0 @@
-{
-  "name": "proof/nqueens",
-  "dependencies": {
-    "lodash": "~3.10.1",
-    "semantic-ui": "^2.1.0",
-    "system.js": "^0.19"
-  }
-}
