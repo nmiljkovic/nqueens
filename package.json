@@ -4,6 +4,7 @@
     "systemjs": "^0.19.0"
   },
   "devDependencies": {
+    "commander": "^2.9.0",
     "del": "^2.1.0",
     "gulp": "git://github.com/gulpjs/gulp.git#4.0",
     "gulp-autoprefixer": "^3.1.0",

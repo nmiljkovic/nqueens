@@ -1,5 +1,6 @@
 'use strict';
 
+var commander = require('commander');
 var gulp = require('gulp');
 var debug = require('gulp-debug');
 var autoprefixer = require('gulp-autoprefixer');
@@ -17,9 +18,24 @@ var systemjsModuleName = require('gulp-systemjs-module-name-injector');
 var merge = require('merge-stream');
 var del = require('del');
 
+commander
+    .option('-p, --port <port>', 'Webserver port', 8000)
+    .option('--livereload-disabled', 'Disable livereload')
+    .option('--livereload-port <port>', 'Livereload port', 35279)
+    .option('--base-path <prefix>', 'Base path to prepend to assets', '/')
+    .parse(process.argv);
+
 var config = {
     distDir: 'dist',
-    tmpDir: 'tmp'
+    tmpDir: 'tmp',
+    port: commander.port,
+    livereload: {
+        enabled: !commander.livereloadDisabled,
+        port: commander.livereloadPort
+    },
+    // The --base-path parameter is important since it produces builds compatible with
+    // projects hosted on a different path than root (e.g. http://proof.github.io/nqueens).
+    basePath: commander.basePath
 };
 
 var tsProject = typescript.createProject({
@@ -41,6 +57,25 @@ function styleTag(styles) {
         .join("\n");
 }
 
+function trimSlashes(str) {
+    return str.replace(/^\/+|\/+$/g, '');
+}
+
+function replaceWithManifest(manifestPathname) {
+    return revReplace({
+        manifest: gulp.src(config.tmpDir + '/' + manifestPathname),
+        modifyReved: function(filename) {
+            var prefix = '';
+
+            if (config.basePath !== '/') {
+                prefix = trimSlashes(config.basePath) + '/';
+            }
+
+            return prefix + trimSlashes(filename);
+        }
+    })
+}
+
 function cleanProject() {
     return del([config.distDir, config.tmpDir]);
 }
@@ -49,10 +84,11 @@ function buildCss() {
     return gulp.src('src/styles/application.scss')
         .pipe(sass().on('error', sass.logError))
         .pipe(autoprefixer())
-        .pipe(revReplace({manifest: gulp.src(config.tmpDir + '/rev-static.json')}))
+        .pipe(replaceWithManifest('rev-static.json'))
+        .pipe(rename('css/application.css'))
         .pipe(rev())
-        .pipe(gulp.dest(config.distDir + '/css'))
-        .pipe(rev.manifest("rev-css.json"))
+        .pipe(gulp.dest(config.distDir))
+        .pipe(rev.manifest('rev-css.json'))
         .pipe(gulp.dest(config.tmpDir));
 }
 
@@ -64,10 +100,10 @@ function buildJsVendors() {
         'node_modules/angular2/bundles/router.js',
         'node_modules/angular2/bundles/http.min.js',
     ])
-        .pipe(concat('vendor.js'))
+        .pipe(concat('js/vendor.js'))
         .pipe(rev())
-        .pipe(gulp.dest(config.distDir + '/js'))
-        .pipe(rev.manifest("rev-js-vendors.json"))
+        .pipe(gulp.dest(config.distDir))
+        .pipe(rev.manifest('rev-js-vendors.json'))
         .pipe(gulp.dest(config.tmpDir));
 }
 
@@ -75,31 +111,31 @@ function buildTypescript() {
     return gulp.src(['typings/tsd.d.ts', 'src/scripts/**/*.ts'])
         .pipe(typescript(tsProject))
         .pipe(systemjsModuleName())
-        .pipe(concat('app.js'))
+        .pipe(concat('js/app.js'))
         .pipe(uglify())
         .pipe(rev())
-        .pipe(gulp.dest(config.distDir + '/js'))
-        .pipe(rev.manifest("rev-js.json"))
+        .pipe(gulp.dest(config.distDir))
+        .pipe(rev.manifest('rev-js.json'))
         .pipe(gulp.dest(config.tmpDir));
 }
 
 function buildHtml() {
     var scripts = {
-        vendor: ['js/vendor.js'],
-        app: ['js/app.js']
+        vendor: ['/js/vendor.js'],
+        app: ['/js/app.js']
     };
 
     var styles = {
-        app: ['css/application.css']
+        app: ['/css/application.css']
     };
 
     return gulp.src('src/templates/index.html')
         .pipe(replace('<!-- js/vendor -->', scriptTag(scripts.vendor)))
         .pipe(replace('<!-- js/app -->', scriptTag(scripts.app)))
         .pipe(replace('<!-- css/app -->', styleTag(styles.app)))
-        .pipe(revReplace({manifest: gulp.src(config.tmpDir + "/rev-js-vendors.json")}))
-        .pipe(revReplace({manifest: gulp.src(config.tmpDir + "/rev-js.json")}))
-        .pipe(revReplace({manifest: gulp.src(config.tmpDir + "/rev-css.json")}))
+        .pipe(replaceWithManifest('/rev-js-vendors.json'))
+        .pipe(replaceWithManifest('/rev-js.json'))
+        .pipe(replaceWithManifest('/rev-css.json'))
         .pipe(gulp.dest(config.distDir));
 }
 
@@ -107,7 +143,7 @@ function copyStatic() {
     return  gulp.src('src/images/**/*', {base: 'src'})
         .pipe(rev())
         .pipe(gulp.dest(config.distDir))
-        .pipe(rev.manifest("rev-static.json"))
+        .pipe(rev.manifest('rev-static.json'))
         .pipe(gulp.dest(config.tmpDir));
 }
 
@@ -123,25 +159,25 @@ function buildTypescriptDev() {
         .pipe(sourcemaps.init())
         .pipe(typescript(tsProject))
         .pipe(systemjsModuleName())
-        .pipe(concat('app.js'))
+        .pipe(concat('js/app.js'))
         .pipe(sourcemaps.write())
-        .pipe(gulp.dest(config.distDir + '/js'));
+        .pipe(gulp.dest(config.distDir));
 }
 
 function buildHtmlDev() {
     var scripts = {
         vendor: [
-            'vendor/js/lodash.js',
-            'vendor/js/system.src.js',
-            'vendor/js/angular2.dev.js',
-            'vendor/js/router.dev.js',
-            'vendor/js/http.dev.js'
+            '/vendor/js/lodash.js',
+            '/vendor/js/system.src.js',
+            '/vendor/js/angular2.dev.js',
+            '/vendor/js/router.dev.js',
+            '/vendor/js/http.dev.js'
         ],
-        app: ['js/app.js']
+        app: ['/js/app.js']
     };
 
     var styles = {
-        app: ['css/application.css']
+        app: ['/css/application.css']
     };
 
     return gulp.src('src/templates/index.html')
@@ -176,7 +212,11 @@ function runServer() {
     return gulp.src('dist')
         .pipe(webserver({
             host: '0.0.0.0',
-            livereload: true
+            port: config.port,
+            livereload: {
+                enabled: config.livereload.enabled,
+                port: config.livereload.port
+            }
         }));
 }
 
