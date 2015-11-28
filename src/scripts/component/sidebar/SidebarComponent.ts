@@ -23,9 +23,9 @@ import {Simulation, BoardEditor, VisualOptions} from "../../simulation";
         [progress]="simulationProgress">
     </sidebar-progress>
 
-    <div class="sixteen wide column" *ng-if="!solved">
+    <div class="sixteen wide column" *ng-if="!solved && !editing">
         <div class="ui yellow message">
-            A solution has not been found. You can still step through the simulation.
+            No solutions were found. You can still step through the simulation.
         </div>
     </div>
 
