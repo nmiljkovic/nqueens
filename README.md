@@ -13,6 +13,7 @@ git checkout https://github.com/proof/nqueens.git
 cd nqueens
 bower install
 npm install
+tsd install
 
 gulp       # run locally
 gulp build # build for release
