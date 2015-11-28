@@ -102,7 +102,7 @@ body {
     text-indent: -9999px; }
   .board .board-cell.queen {
     text-indent: -9999px;
-    background: transparent url("/images/queen-e8797e024a.png") no-repeat center;
+    background: transparent url("/nqueens/images/queen-e8797e024a.png") no-repeat center;
     background-size: 90%; }
   .board.editing .board-cell:not(.unsafe):hover,
   .board .board-cell.queen.user-placed {
